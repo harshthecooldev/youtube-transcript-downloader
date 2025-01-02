@@ -22,9 +22,9 @@
 
     <script>
         function getVideoId(url) {
-            const regExp = /(?:https?:\/\/(?:www\.)?youtube\.com\/(?:[^\/\n\s]+\/[^\n\s]+|(?:v|e(?:mbed)?)\/?([^"&?\/\s]{11})))/;
+            const regExp = /(?:youtube\.com(?:\/[^\/\n\s]+\/[^\n\s]+|\/(?:v|e(?:mbed)?)\/?([^"&?\/\s]{11}))|youtu\.be\/([^"&?\/\s]{11}))/;
             const match = url.match(regExp);
-            return match ? match[1] : null;
+            return match ? match[1] || match[2] : null;
         }
 
         async function getTranscript() {
@@ -36,7 +36,7 @@
                 return;
             }
 
-            const apiKey = 'AIzaSyC_1TpUwoYBSK-GhQQWBwNctwkg7YyjbV8'; // Replace with your YouTube API Key
+            const apiKey = 'YOUR_YOUTUBE_API_KEY'; // Replace with your YouTube API Key
             const url = `https://www.googleapis.com/youtube/v3/captions?videoId=${videoId}&key=${apiKey}`;
             
             try {
