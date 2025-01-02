@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Transcript Downloader</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        input, button { padding: 10px; margin: 10px 0; }
+        button { cursor: pointer; }
+        #error { color: red; display: none; }
+    </style>
+</head>
+<body>
+    <h1>Download YouTube Transcript</h1>
+    <p>Enter the YouTube video URL:</p>
+    <input type="text" id="videoUrl" placeholder="https://www.youtube.com/watch?v=...">
+    <button onclick="getTranscript()">Get Transcript</button>
+    <div id="error"></div>
+    <pre id="transcript" style="display:none;"></pre>
+    <button id="downloadBtn" style="display:none;" onclick="downloadTranscript()">Download Transcript</button>
+
+    <script>
+        function getVideoId(url) {
+            const regExp = /(?:https?:\/\/(?:www\.)?youtube\.com\/(?:[^\/\n\s]+\/[^\n\s]+|(?:v|e(?:mbed)?)\/?([^"&?\/\s]{11})))/;
+            const match = url.match(regExp);
+            return match ? match[1] : null;
+        }
+
+        async function getTranscript() {
+            const videoUrl = document.getElementById("videoUrl").value;
+            const videoId = getVideoId(videoUrl);
+            if (!videoId) {
+                document.getElementById("error").textContent = "Invalid YouTube URL";
+                document.getElementById("error").style.display = "block";
+                return;
+            }
+
+            const apiKey = 'YOUR_YOUTUBE_API_KEY'; // Replace with your YouTube API Key
+            const url = `https://www.googleapis.com/youtube/v3/captions?videoId=${videoId}&key=${apiKey}`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                if (data.items && data.items.length > 0) {
+                    const captionId = data.items[0].id;
+                    fetchTranscript(captionId, apiKey);
+                } else {
+                    throw new Error("No captions found for this video.");
+                }
+            } catch (error) {
+                document.getElementById("error").textContent = error.message;
+                document.getElementById("error").style.display = "block";
+            }
+        }
+
+        async function fetchTranscript(captionId, apiKey) {
+            const url = `https://www.googleapis.com/youtube/v3/captions/${captionId}?key=${apiKey}`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                if (data.body) {
+                    document.getElementById("transcript").textContent = data.body;
+                    document.getElementById("transcript").style.display = "block";
+                    document.getElementById("downloadBtn").style.display = "block";
+                }
+            } catch (error) {
+                document.getElementById("error").textContent = "Error fetching transcript.";
+                document.getElementById("error").style.display = "block";
+            }
+        }
+
+        function downloadTranscript() {
+            const transcript = document.getElementById("transcript").textContent;
+            const blob = new Blob([transcript], { type: "text/plain;charset=utf-8" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "transcript.txt";
+            link.click();
+        }
+    </script>
+</body>
+</html>
